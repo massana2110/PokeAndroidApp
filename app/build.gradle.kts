@@ -60,6 +60,7 @@ dependencies {
     // Retrofit and JSON converter
     implementation(libs.retrofit)
     implementation(libs.retrofit.moshi.converter)
+    implementation(libs.moshi)
 
     // Room
     implementation(libs.room.runtime)

@@ -1,6 +1,8 @@
 package com.massana2110.pokeandroid.di
 
 import com.massana2110.pokeandroid.data.datasources.network.PokeAndroidClient
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,9 +19,13 @@ object NetworkModule {
 
     @Singleton
     @Provides
-    fun provideRetrofit(): Retrofit = Retrofit.Builder()
+    fun provideMoshi(): Moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+
+    @Singleton
+    @Provides
+    fun provideRetrofit(moshi: Moshi): Retrofit = Retrofit.Builder()
         .baseUrl(BASE_API_URL)
-        .addConverterFactory(MoshiConverterFactory.create())
+        .addConverterFactory(MoshiConverterFactory.create(moshi))
         .build()
 
     @Singleton
