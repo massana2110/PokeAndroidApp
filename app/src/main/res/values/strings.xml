@@ -43,4 +43,7 @@
         libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus
         vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
     </string>
+    <string name="pokedex_title">Pokédex</string>
+    <string name="pokemon_intro_text">Descubre, explora y aprende sobre cada uno de los pokemon que habitan nuestro universo.</string>
+    <string name="search_label">Buscar</string>
 </resources>

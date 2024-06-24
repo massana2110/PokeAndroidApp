@@ -13,4 +13,8 @@ class PokemonRepository @Inject constructor(
         pokeAndroidClient.getPokemonList(limit, offset)
     }
 
+    suspend fun fetchPokemonDetailById(id: Int) = apiRequest {
+        pokeAndroidClient.getPokemonDetail(id)
+    }
+
 }

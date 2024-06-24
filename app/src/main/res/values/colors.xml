@@ -2,4 +2,9 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="white_transparency_12">#1FFFFFFF</color>
+    <color name="chipBackgroundGray">#33283141</color>
+    <color name="yellowPrimary">#FFCC00</color>
+    <color name="ghostWhite">#F8F8FF</color>
+    <color name="obsidianBlack">#0B1215</color>
 </resources>

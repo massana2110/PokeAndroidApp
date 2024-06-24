@@ -5,6 +5,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
 import com.massana2110.pokeandroid.databinding.ActivityMainBinding
+import com.massana2110.pokeandroid.presentation.adapter.PokemonListAdapter
 import com.massana2110.pokeandroid.presentation.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -12,6 +13,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var pokemonAdapter: PokemonListAdapter
     private val mainViewModel by viewModels<MainViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,10 +23,20 @@ class MainActivity : AppCompatActivity() {
 
         mainViewModel.fetchPokemonList()
 
-        binding.fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null)
-                .setAnchorView(R.id.fab).show()
+        initViews()
+        setupObservers()
+    }
+
+    private fun initViews() {
+        pokemonAdapter = PokemonListAdapter(emptyList())
+        binding.pokemonListRecyclerView.adapter = pokemonAdapter
+    }
+
+    private fun setupObservers() {
+        mainViewModel.pokemonList.observe(this) {
+            if (!it.isNullOrEmpty()) {
+                pokemonAdapter.updateList(it)
+            }
         }
     }
 }
