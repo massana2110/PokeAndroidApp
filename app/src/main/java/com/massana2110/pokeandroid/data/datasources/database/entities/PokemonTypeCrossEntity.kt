@@ -19,7 +19,7 @@ data class PokemonTypeCrossEntity(
 data class PokemonWithTypes(
     @Embedded val pokemon: PokemonEntity,
     @Relation(
-        parentColumn = "id",
+        parentColumn = "pokemonId",
         entityColumn = "typeId",
         associateBy = Junction(PokemonTypeCrossEntity::class)
     )

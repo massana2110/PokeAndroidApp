@@ -24,7 +24,7 @@ class PokemonRepository @Inject constructor(
         pokeAndroidClient.getPokemonDetail(id)
     }
 
-    // Database operations
+    // INSERT Database Operations
     suspend fun insertAllTypes(
         listPokemonType: List<PokemonTypeEntity>
     ) {
@@ -44,4 +44,16 @@ class PokemonRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+    // GET Database Operations
+    suspend fun getPokemonCount(): Result<Int> {
+        return try {
+            val pokemonCount = pokemonDao.getPokemonCount()
+            Result.success(pokemonCount)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun getPokemonList() = pokemonDao.getAllPokemonWithTypes()
 }

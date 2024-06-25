@@ -1,5 +1,6 @@
 package com.massana2110.pokeandroid.domain.mappers
 
+import com.massana2110.pokeandroid.data.datasources.database.entities.PokemonTypeEntity
 import com.massana2110.pokeandroid.data.datasources.network.models.PokemonDetailResponse
 import com.massana2110.pokeandroid.domain.models.PokemonItemModel
 import com.massana2110.pokeandroid.domain.models.PokemonTypesEnumModel
@@ -32,3 +33,5 @@ fun PokemonDetailResponse.toDomain() = PokemonItemModel(
     },
     pokemonSprite = sprites?.other?.home?.frontDefault ?: ""
 )
+
+fun PokemonTypeEntity.toDomain() = PokemonTypesEnumModel.fromOrdinal(this.typeId)

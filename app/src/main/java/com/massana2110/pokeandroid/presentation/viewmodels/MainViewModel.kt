@@ -8,8 +8,18 @@ import com.massana2110.pokeandroid.domain.mappers.toDomain
 import com.massana2110.pokeandroid.domain.models.PokemonItemModel
 import com.massana2110.pokeandroid.domain.models.PokemonTypesEnumModel
 import com.massana2110.pokeandroid.domain.usecases.GetPokemonListFromApiUseCase
+import com.massana2110.pokeandroid.domain.usecases.GetPokemonListFromDbUseCase
 import com.massana2110.pokeandroid.domain.usecases.SavePokemonTypeInDbUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -34,31 +44,34 @@ private val listTypesToInsert = listOf(
     PokemonTypesEnumModel.WATER
 )
 
+data class MainUiState(
+    val pokemonList: List<PokemonItemModel> = emptyList(),
+    val isLoading: Boolean = true
+)
+
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val getPokemonListFromApiUseCase: GetPokemonListFromApiUseCase,
+    private val getPokemonListFromDbUseCase: GetPokemonListFromDbUseCase,
     private val savePokemonTypeInDbUseCase: SavePokemonTypeInDbUseCase
-): ViewModel() {
+) : ViewModel() {
 
-    private val _pokemonList = MutableLiveData<List<PokemonItemModel>>()
-    val pokemonList: LiveData<List<PokemonItemModel>> = _pokemonList
+    private val _uiState = MutableStateFlow(MainUiState())
+    val uiState: StateFlow<MainUiState> = _uiState
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             savePokemonTypeInDbUseCase(listTypesToInsert)
         }
     }
 
-    fun fetchPokemonList() {
+    fun getPokemonList() {
         viewModelScope.launch {
-            getPokemonListFromApiUseCase(20, 20)
-                ?.onSuccess { _pokemonList.postValue(it.map { pokemon -> pokemon.toDomain() }) }
-                ?.onFailure { println(it.message) }
+            getPokemonListFromDbUseCase()
+                .catch { println("Error") }
+                .collect { pokemonList ->
+                _uiState.update { it.copy(pokemonList = pokemonList, isLoading = false) }
+            }
         }
-    }
-
-    private fun saveAllPokemonInLocalDb() {
-
     }
 
 }

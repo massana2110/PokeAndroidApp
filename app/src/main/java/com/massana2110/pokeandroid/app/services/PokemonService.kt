@@ -6,10 +6,12 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
 import android.os.Build
-import android.os.Handler
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.massana2110.pokeandroid.R
+import com.massana2110.pokeandroid.app.utils.flatMap
+import com.massana2110.pokeandroid.domain.mappers.toDomain
+import com.massana2110.pokeandroid.domain.usecases.GetPokemonCountDbUseCase
 import com.massana2110.pokeandroid.domain.usecases.GetPokemonListFromApiUseCase
 import com.massana2110.pokeandroid.domain.usecases.SavePokemonInDbUseCase
 import dagger.hilt.android.AndroidEntryPoint
@@ -17,13 +19,17 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class PokemonService: Service() {
+class PokemonService : Service() {
+
+    @Inject
+    lateinit var getPokemonCountDbUseCase: GetPokemonCountDbUseCase
 
     @Inject
     lateinit var getPokemonListFromApiUseCase: GetPokemonListFromApiUseCase
@@ -38,15 +44,32 @@ class PokemonService: Service() {
 
     override fun onCreate() {
         super.onCreate()
+        println("INIT POKEMON SERVICE")
+        createNotificationChannel()
         startForeground(1, createInitialNotification())
+
         scheduler = Executors.newSingleThreadScheduledExecutor()
         scheduler.scheduleWithFixedDelay({
             serviceScope.launch {
-                getPokemonListFromApiUseCase(limit, offset)
-                    ?.onSuccess {
-                        println("Service pokemon: $it")
-                    }
-                    ?.onFailure { println(it.message) }
+                val result = withContext(Dispatchers.IO) {
+                    getPokemonCountDbUseCase()
+                        .flatMap { count ->
+                            offset = count
+                            getPokemonListFromApiUseCase(limit, offset)!!
+                        }
+                        .flatMap { pokemonList ->
+                            savePokemonInDbUseCase(pokemonList.map { it.toDomain() })
+                        }
+                }
+
+                result.onSuccess {
+                    offset += limit
+                    limit = 10
+                    showUpdateNotification()
+                }.onFailure { ex ->
+                    println(ex.message)
+                    // TODO: Handle failure case, e.g., retry logic or user notification
+                }
             }
         }, 0, 30, TimeUnit.SECONDS)
     }
@@ -59,6 +82,7 @@ class PokemonService: Service() {
 
     override fun onDestroy() {
         scheduler.shutdown()
+        println("SERVICE DESTROYED")
         super.onDestroy()
     }
 
@@ -78,7 +102,7 @@ class PokemonService: Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Pokemon Service")
             .setContentText("Fetching Pokemon data...")
-            .setSmallIcon(R.drawable.ic_pokeball_24)
+            .setSmallIcon(R.drawable.ic_pokeball_notification)
             .build()
     }
 
@@ -86,7 +110,7 @@ class PokemonService: Service() {
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Pokemon List Updated")
             .setContentText("The list of Pokémon has been updated.")
-            .setSmallIcon(R.drawable.ic_pokeball_24)
+            .setSmallIcon(R.drawable.ic_pokeball_notification)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
 

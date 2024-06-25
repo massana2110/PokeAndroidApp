@@ -22,4 +22,7 @@ interface PokemonDao {
 
     @Query("SELECT * FROM pokemon_table")
     fun getAllPokemonWithTypes(): Flow<List<PokemonWithTypes>>
+
+    @Query("SELECT COUNT(*) FROM pokemon_table")
+    suspend fun getPokemonCount(): Int
 }

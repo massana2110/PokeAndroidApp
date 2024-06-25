@@ -32,5 +32,11 @@ enum class PokemonTypesEnumModel(
     PSYCHIC("Psiquico", "#FF6675", R.drawable.ic_type_psychic),
     ROCK("Roca", "#C8B686", R.drawable.ic_type_rock),
     STEEL("Acero", "#5A8EA2", R.drawable.ic_type_steel),
-    WATER("Agua", "#3692DC", R.drawable.ic_type_water)
+    WATER("Agua", "#3692DC", R.drawable.ic_type_water);
+
+    companion object {
+        fun fromOrdinal(ordinal: Int): PokemonTypesEnumModel? {
+            return entries.getOrNull(ordinal)
+        }
+    }
 }

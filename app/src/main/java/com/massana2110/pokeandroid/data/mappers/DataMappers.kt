@@ -6,7 +6,7 @@ import com.massana2110.pokeandroid.domain.models.PokemonItemModel
 import com.massana2110.pokeandroid.domain.models.PokemonTypesEnumModel
 
 fun PokemonItemModel.toPokemonEntity() = PokemonEntity(
-    id = pokemonId,
+    pokemonId = pokemonId,
     name = pokemonName,
     pokemonSprite = pokemonSprite
 )
