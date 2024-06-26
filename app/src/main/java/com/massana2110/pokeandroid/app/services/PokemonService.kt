@@ -25,6 +25,11 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
+/**
+ * Pokemon service class that handle the pokemon data sync from internet to
+ * local storage of device. It runs in the background even when app
+ * is minimized.
+ */
 @AndroidEntryPoint
 class PokemonService : Service() {
 
@@ -63,15 +68,15 @@ class PokemonService : Service() {
                 }
 
                 result.onSuccess {
+                    showUpdateNotification("Lista de pokemon actualizada: #$offset -#${offset+limit}")
                     offset += limit
                     limit = 10
-                    showUpdateNotification()
                 }.onFailure { ex ->
                     println(ex.message)
-                    // TODO: Handle failure case, e.g., retry logic or user notification
+                    showUpdateNotification("Ocurrio un error inesperado, intentando nuevamente...")
                 }
             }
-        }, 0, 30, TimeUnit.SECONDS)
+        }, 0, 60, TimeUnit.SECONDS)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -100,16 +105,16 @@ class PokemonService : Service() {
 
     private fun createInitialNotification(): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Pokemon Service")
-            .setContentText("Fetching Pokemon data...")
+            .setContentTitle("PokeAndroid")
+            .setContentText("Obteniendo pokemons...")
             .setSmallIcon(R.drawable.ic_pokeball_notification)
             .build()
     }
 
-    private fun showUpdateNotification() {
+    private fun showUpdateNotification(message: String) {
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Pokemon List Updated")
-            .setContentText("The list of Pokémon has been updated.")
+            .setContentTitle("PokeAndroid")
+            .setContentText(message)
             .setSmallIcon(R.drawable.ic_pokeball_notification)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()

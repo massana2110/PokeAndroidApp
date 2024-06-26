@@ -4,10 +4,14 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
@@ -32,15 +36,14 @@ class MainActivity : AppCompatActivity() {
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
             if (isGranted) {
-                // Permiso concedido, puedes mostrar notificaciones
-                // Iniciar el servicio
+                // Permission is granted, nothing to do here
+                Toast.makeText(this, "Permiso concedido", Toast.LENGTH_SHORT).show()
                 intentService = Intent(this, PokemonService::class.java)
                 startService(intentService)
-            } else {
-                // Permiso denegado, maneja esto en consecuencia
-                Toast.makeText(this, "Se requiere permiso de notificaciones", Toast.LENGTH_SHORT)
-                    .show()
             }
+            else
+            // permission is denied, request again
+                Toast.makeText(this, "Permiso denegado", Toast.LENGTH_SHORT).show()
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,8 +52,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         requestNotificationPermission()
-        mainViewModel.getPokemonList()
 
+        mainViewModel.setupSearchWithPokemonUpdates()
+        mainViewModel.getPokemonList()
         initViews()
         setupObservers()
     }
@@ -64,8 +68,24 @@ class MainActivity : AppCompatActivity() {
     private fun initViews() {
         pokemonAdapter = PokemonListAdapter(emptyList())
         binding.pokemonListRecyclerView.adapter = pokemonAdapter
+
+        // Add text watcher to search text field
+        binding.searchPokemonTextField.addTextChangedListener(object: TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                mainViewModel.setSearchQuery(s.toString())
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+
+        })
     }
 
+    /**
+     * Observer for ui state flow, this handle all the updates in the screen safely
+     * in the lifecycle.
+     */
     private fun setupObservers() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -76,11 +96,19 @@ class MainActivity : AppCompatActivity() {
                     if (uiState.pokemonList.isNotEmpty()) {
                         pokemonAdapter.updateList(uiState.pokemonList)
                     }
+
+                    if (uiState.error.isNotEmpty()) {
+                        showErrorsDialog(uiState.error)
+                    }
                 }
             }
         }
     }
 
+    /**
+     * Check and request notification permission on Android 13+ Devices
+     * otherwise start service
+     */
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             when {
@@ -88,18 +116,46 @@ class MainActivity : AppCompatActivity() {
                     this,
                     android.Manifest.permission.POST_NOTIFICATIONS
                 ) == PackageManager.PERMISSION_GRANTED -> {
-                    Toast.makeText(this, "Permiso concedido", Toast.LENGTH_SHORT)
-                        .show()
-
                     intentService = Intent(this, PokemonService::class.java)
                     startService(intentService)
                 }
 
+                shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS) -> {
+                    // Explain to the user why the permission is needed
+                    showPermissionRationaleDialog()
+                }
+
                 else -> {
-                    // Solicitar el permiso
+                    // Request notifications permission
                     requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
+        } else {
+            intentService = Intent(this, PokemonService::class.java)
+            startService(intentService)
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private fun showPermissionRationaleDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Permiso de notificaciones necesario")
+            .setMessage("Nuestra pokedex necesita de este permiso para obtener los pokemon")
+            .setPositiveButton("OK") { _, _ ->
+                requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+                Toast.makeText(this, "Permiso denegado", Toast.LENGTH_SHORT).show()
+            }
+            .show()
+    }
+
+    private fun showErrorsDialog(message: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Error")
+            .setMessage(message)
+            .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+            .show()
     }
 }

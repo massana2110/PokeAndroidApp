@@ -1,11 +1,13 @@
 package com.massana2110.pokeandroid.presentation.adapter
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.massana2110.pokeandroid.databinding.ItemPokemonCardBinding
+import com.massana2110.pokeandroid.databinding.ItemPokemonTypeChipBinding
 import com.massana2110.pokeandroid.domain.models.PokemonItemModel
 import com.squareup.picasso.Picasso
 
@@ -24,6 +26,7 @@ class PokemonListAdapter(
         private val binding: ItemPokemonCardBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
+        @SuppressLint("SetTextI18n")
         fun bind(item: PokemonItemModel) {
             binding.pokemonIdTxtView.text = "#${item.pokemonId}"
             binding.pokemonNameTxtView.text = item.pokemonName
@@ -33,6 +36,19 @@ class PokemonListAdapter(
             if (item.pokemonSprite.isNotBlank()) {
                 Picasso.get().load(item.pokemonSprite)
                     .into(binding.pokemonSpriteImgView)
+            }
+
+            binding.linearLayoutTypes.removeAllViews()
+            item.pokemonTypes.forEach { type ->
+                val typeViewBinding = ItemPokemonTypeChipBinding.inflate(
+                    LayoutInflater.from(binding.linearLayoutTypes.context),
+                    binding.linearLayoutTypes,
+                    false
+                )
+
+                typeViewBinding.typePokemonImageView.setImageResource(type.iconDrawableResId)
+                typeViewBinding.typePokemonTxtView.text = type.displayName
+                binding.linearLayoutTypes.addView(typeViewBinding.root)
             }
         }
     }

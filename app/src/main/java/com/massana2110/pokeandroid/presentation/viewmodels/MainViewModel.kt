@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -46,7 +47,8 @@ private val listTypesToInsert = listOf(
 
 data class MainUiState(
     val pokemonList: List<PokemonItemModel> = emptyList(),
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val error: String = ""
 )
 
 @HiltViewModel
@@ -58,20 +60,63 @@ class MainViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState
 
+    // mutable variables only accessible from this viewmodel
+    private val _pokemonList = MutableStateFlow<List<PokemonItemModel>>(emptyList())
+    private val _searchQuery = MutableStateFlow("")
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
             savePokemonTypeInDbUseCase(listTypesToInsert)
         }
     }
 
-    fun getPokemonList() {
+    /**
+     * Combine the pokemon updates from service with the current list and
+     * search query and expose this result to the main ui state flow that
+     * activity consumes
+     */
+    fun setupSearchWithPokemonUpdates() {
         viewModelScope.launch {
-            getPokemonListFromDbUseCase()
-                .catch { println("Error") }
-                .collect { pokemonList ->
-                _uiState.update { it.copy(pokemonList = pokemonList, isLoading = false) }
+            combine(_searchQuery, _pokemonList) { query, pokemonList ->
+                if (query.isBlank()) {
+                    pokemonList
+                } else {
+                    pokemonList.filter { pokemon ->
+                        pokemon.pokemonName.contains(query, ignoreCase = true) ||
+                                pokemon.pokemonTypes.any { it.displayName.contains(query, ignoreCase = true) }
+                    }
+                }
+            }.catch { e ->
+                // Catching error on pokemon get failed
+                _uiState.update { it.copy(error = "Ocurrió un error obteniendo la lista de Pokémon: ${e.message}") }
+            }.collect { filteredList ->
+                _uiState.update {
+                    it.copy(
+                        pokemonList = filteredList,
+                        isLoading = false,
+                        error = ""
+                    )
+                }
             }
         }
     }
 
+    /**
+     * Init the app with the pokemon list saved in DB
+     */
+    fun getPokemonList() {
+        viewModelScope.launch {
+            getPokemonListFromDbUseCase()
+                .catch {
+                    _uiState.update { it.copy(error = "Ocurrio un error obteniendo la lista de pokemon") }
+                }
+                .collect { pokemonList ->
+                    _pokemonList.value = pokemonList
+                }
+        }
+    }
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
 }

@@ -39,10 +39,11 @@
             tools:text="#0001" />
 
         <LinearLayout
+            android:id="@+id/linearLayoutTypes"
             android:layout_width="wrap_content"
             android:layout_height="80dp"
             android:orientation="vertical"
-            android:gravity="bottom|center"
+            android:gravity="bottom"
             android:layout_margin="12dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
