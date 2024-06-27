@@ -31,7 +31,8 @@ class PokemonListAdapter(
             binding.pokemonIdTxtView.text = "#${item.pokemonId}"
             binding.pokemonNameTxtView.text = item.pokemonName
 
-            binding.root.setCardBackgroundColor(Color.parseColor(item.pokemonTypes[0].colorHex))
+            if (item.pokemonTypes.isNotEmpty())
+                binding.root.setCardBackgroundColor(Color.parseColor(item.pokemonTypes[0].colorHex))
 
             if (item.pokemonSprite.isNotBlank()) {
                 Picasso.get().load(item.pokemonSprite)

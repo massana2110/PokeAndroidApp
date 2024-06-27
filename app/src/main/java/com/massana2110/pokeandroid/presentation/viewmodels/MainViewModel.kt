@@ -4,22 +4,16 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.massana2110.pokeandroid.domain.mappers.toDomain
 import com.massana2110.pokeandroid.domain.models.PokemonItemModel
 import com.massana2110.pokeandroid.domain.models.PokemonTypesEnumModel
-import com.massana2110.pokeandroid.domain.usecases.GetPokemonListFromApiUseCase
 import com.massana2110.pokeandroid.domain.usecases.GetPokemonListFromDbUseCase
 import com.massana2110.pokeandroid.domain.usecases.SavePokemonTypeInDbUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -60,6 +54,9 @@ class MainViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState
 
+    private val _typesAreSaved = MutableLiveData(false)
+    val typesAreSaved: LiveData<Boolean> = _typesAreSaved
+
     // mutable variables only accessible from this viewmodel
     private val _pokemonList = MutableStateFlow<List<PokemonItemModel>>(emptyList())
     private val _searchQuery = MutableStateFlow("")
@@ -67,6 +64,10 @@ class MainViewModel @Inject constructor(
     init {
         viewModelScope.launch(Dispatchers.IO) {
             savePokemonTypeInDbUseCase(listTypesToInsert)
+                .onSuccess {
+                    println("TYPES OF POKEMON SAVED")
+                    _typesAreSaved.postValue(true)
+                }
         }
     }
 
@@ -88,7 +89,9 @@ class MainViewModel @Inject constructor(
                 }
             }.catch { e ->
                 // Catching error on pokemon get failed
-                _uiState.update { it.copy(error = "Ocurrió un error obteniendo la lista de Pokémon: ${e.message}") }
+                _uiState.update { it.copy(
+                    error = "Ocurrió un error obteniendo la lista de Pokémon: ${e.message}")
+                }
             }.collect { filteredList ->
                 _uiState.update {
                     it.copy(

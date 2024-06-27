@@ -10,7 +10,7 @@ class SavePokemonInDbUseCase @Inject constructor(
     private val pokemonRepository: PokemonRepository
 ) {
 
-    suspend operator fun invoke(pokemonList: List<PokemonItemModel>) =
+    suspend operator fun invoke(pokemonList: List<PokemonItemModel>): Result<Long> =
         pokemonRepository.insertAllPokemonWithTypes(
             listPokemon = pokemonList.map { it.toPokemonEntity() },
             listPokemonType = getListPokemonTypeCrossEntity(pokemonList)

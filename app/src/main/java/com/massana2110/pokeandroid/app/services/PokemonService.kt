@@ -76,7 +76,7 @@ class PokemonService : Service() {
                     showUpdateNotification("Ocurrio un error inesperado, intentando nuevamente...")
                 }
             }
-        }, 0, 60, TimeUnit.SECONDS)
+        }, 0, 30, TimeUnit.SECONDS)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

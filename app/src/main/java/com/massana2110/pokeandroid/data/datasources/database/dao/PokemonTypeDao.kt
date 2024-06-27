@@ -9,5 +9,5 @@ import com.massana2110.pokeandroid.data.datasources.database.entities.PokemonTyp
 interface PokemonTypeDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTypes(typesList: List<PokemonTypeEntity>)
+    suspend fun insertTypes(typesList: List<PokemonTypeEntity>): List<Long>
 }

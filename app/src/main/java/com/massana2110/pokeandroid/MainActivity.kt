@@ -32,14 +32,16 @@ class MainActivity : AppCompatActivity() {
     private lateinit var pokemonAdapter: PokemonListAdapter
     private val mainViewModel by viewModels<MainViewModel>()
     private var intentService: Intent? = null
+    private var typesAreSaved: Boolean = false
+    private var notificationsAreAllowed = false
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
             if (isGranted) {
                 // Permission is granted, nothing to do here
                 Toast.makeText(this, "Permiso concedido", Toast.LENGTH_SHORT).show()
-                intentService = Intent(this, PokemonService::class.java)
-                startService(intentService)
+                notificationsAreAllowed = true
+                checkConditionsToInitiateService()
             }
             else
             // permission is denied, request again
@@ -103,6 +105,26 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        mainViewModel.typesAreSaved.observe(this) {
+            if (it) {
+                typesAreSaved = true
+                checkConditionsToInitiateService()
+            }
+        }
+    }
+
+    private fun checkConditionsToInitiateService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (notificationsAreAllowed && typesAreSaved) initService()
+        } else {
+            if (typesAreSaved) initService()
+        }
+    }
+
+    private fun initService() {
+        intentService = Intent(this, PokemonService::class.java)
+        startService(intentService)
     }
 
     /**
@@ -131,8 +153,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         } else {
-            intentService = Intent(this, PokemonService::class.java)
-            startService(intentService)
+            checkConditionsToInitiateService()
         }
     }
 

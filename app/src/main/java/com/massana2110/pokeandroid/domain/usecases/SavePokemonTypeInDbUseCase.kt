@@ -9,8 +9,11 @@ class SavePokemonTypeInDbUseCase @Inject constructor(
     private val pokemonRepository: PokemonRepository
 ) {
 
-    suspend operator fun invoke(typesList: List<PokemonTypesEnumModel>) {
-        pokemonRepository.insertAllTypes(typesList.map { it.toPokemonTypeEntity() })
+    suspend operator fun invoke(typesList: List<PokemonTypesEnumModel>): Result<Int> {
+        val rowsAffected = pokemonRepository.insertAllTypes(typesList.map { it.toPokemonTypeEntity() })
+
+        return if (rowsAffected.isNotEmpty()) Result.success(rowsAffected.size)
+        else Result.failure(Exception("Error al guardar los tipos de pokemon"))
     }
 
 }

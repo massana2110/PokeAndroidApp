@@ -13,12 +13,12 @@ import kotlinx.coroutines.flow.Flow
 interface PokemonDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAllPokemon(pokemonList: List<PokemonEntity>)
+    suspend fun insertAllPokemon(pokemonList: List<PokemonEntity>): List<Long>
 
     @Insert
     suspend fun insertAllPokemonTypesCross(
         pokemonWithTypesList: List<PokemonTypeCrossEntity>
-    )
+    ): List<Long>
 
     @Query("SELECT * FROM pokemon_table")
     fun getAllPokemonWithTypes(): Flow<List<PokemonWithTypes>>

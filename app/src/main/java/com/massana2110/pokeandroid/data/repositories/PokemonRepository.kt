@@ -27,18 +27,22 @@ class PokemonRepository @Inject constructor(
     // INSERT Database Operations
     suspend fun insertAllTypes(
         listPokemonType: List<PokemonTypeEntity>
-    ) {
-        pokemonTypeDao.insertTypes(listPokemonType)
-    }
+    ) = pokemonTypeDao.insertTypes(listPokemonType)
+
 
     suspend fun insertAllPokemonWithTypes(
         listPokemon: List<PokemonEntity>,
         listPokemonType: List<PokemonTypeCrossEntity>
-    ): Result<Unit> {
+    ): Result<Long> {
         return try {
-            pokemonDao.insertAllPokemon(listPokemon)
-            pokemonDao.insertAllPokemonTypesCross(listPokemonType)
-            Result.success(Unit)
+            val pokemonInserted = pokemonDao.insertAllPokemon(listPokemon)
+            val pokemonTypesInserted = pokemonDao.insertAllPokemonTypesCross(listPokemonType)
+
+            if (pokemonInserted.isNotEmpty() && pokemonTypesInserted.isNotEmpty())
+                // return the number of rows affected
+                Result.success(pokemonInserted.size.toLong())
+            else
+                Result.failure(Exception("No items inserted"))
         } catch (e: Exception) {
             println(e)
             Result.failure(e)
