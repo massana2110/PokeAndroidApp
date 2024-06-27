@@ -46,12 +46,28 @@ La aplicación sigue la arquitectura MVVM (Model-View-ViewModel) junto con princ
 
 ## Screenshots
 
-
-|**Pantalla principal**|**Busqueda**|**Notificaciones**|
-
-| -------------------- | ---------- | -----------------|
-
-|![Main Screenshot](/screenshots/main_screen.png)  | ![Search Screenshot](/screenshots/search.png) | ![Notifications Screenshot](/screenshots/notifications.png)|
+<table>
+  <thead>
+    <tr>
+      <th>Pantalla principal</th>
+      <th>Pantalla de busqueda</th>
+      <th>Notificaciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <img src="screenshots/main_screen.png" width="300" alt="main screenshot">
+      </td>
+      <td>
+        <img src="screenshots/search.png" width="300"  alt="search screenshot">
+      </td>
+      <td>
+        <img src="screenshots/notifications.png" width="300" alt="notifications screenshot">
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ## Authors
 
