@@ -93,6 +93,7 @@ class MainViewModel @Inject constructor(
             }.catch { e ->
                 // Catching error on pokemon get failed
                 _uiState.update { it.copy(
+                    isLoading = false,
                     error = "Ocurrió un error obteniendo la lista de Pokémon: ${e.message}")
                 }
             }.collect { filteredList ->
@@ -114,7 +115,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             getPokemonListFromDbUseCase()
                 .catch {
-                    _uiState.update { it.copy(error = "Ocurrio un error obteniendo la lista de pokemon") }
+                    _uiState.update { it.copy(error = "Ocurrio un error obteniendo la lista de pokemon", isLoading = false) }
                 }
                 .collect { pokemonList ->
                     _pokemonList.value = pokemonList
