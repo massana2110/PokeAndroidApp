@@ -39,6 +39,9 @@ private val listTypesToInsert = listOf(
     PokemonTypesEnumModel.WATER
 )
 
+/**
+ * Main Activity UI State managed by viewmodel
+ */
 data class MainUiState(
     val pokemonList: List<PokemonItemModel> = emptyList(),
     val isLoading: Boolean = true,
